@@ -1,0 +1,93 @@
+{% extends 'todo_app/base.html' %}
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">
+            {% if form.instance.pk %}
+                Update Task
+            {% else %}
+                Create Task
+            {% endif %}
+        </h1>
+        <!-- Bootstrap Form -->
+        <form method="post"
+              action=""
+              class="w-50 mx-auto border p-4 shadow-sm rounded">
+            {% csrf_token %}
+            <!-- Display Form Fields with Bootstrap -->
+            <div class="mb-3">
+                <label for="title" class="form-label">Task Title</label>
+                <input type="text"
+                       class="form-control {% if form.title.errors %}is-invalid{% endif %}"
+                       id="title"
+                       name="title"
+                       value="{{ form.title.value|default:'' }}"
+                       placeholder="Enter task title"
+                       required>
+                {% if form.title.errors %}<div class="invalid-feedback">{{ form.title.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Task Description</label>
+                <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                          id="description"
+                          name="description"
+                          placeholder="Enter task description"
+                          required>{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}<div class="invalid-feedback">{{ form.description.errors.0 }}</div>{% endif %}
+            </div>
+            <!-- Priority Dropdown -->
+            <div class="mb-3">
+                <label for="priority" class="form-label">Priority</label>
+                <select class="form-select {% if form.priority.errors %}is-invalid{% endif %}"
+                        id="priority"
+                        name="priority"
+                        required>
+                    <option value="Low" {% if form.priority.value == "Low" %}selected{% endif %}>Low</option>
+                    <option value="Medium" {% if form.priority.value == "Medium" %}selected{% endif %}>Medium</option>
+                    <option value="High" {% if form.priority.value == "High" %}selected{% endif %}>High</option>
+                </select>
+                {% if form.priority.errors %}<div class="invalid-feedback">{{ form.priority.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="due_date" class="form-label">Due Date</label>
+                <input type="date"
+                       class="form-control {% if form.due_date.errors %}is-invalid{% endif %}"
+                       id="due_date"
+                       name="due_date"
+                       value="{{ form.due_date.value|default:'' }}"
+                       required>
+                {% if form.due_date.errors %}<div class="invalid-feedback">{{ form.due_date.errors.0 }}</div>{% endif %}
+            </div>
+            <!-- Categories Multi-Select with Inline Checkboxes -->
+            <div class="mb-3">
+                <label class="form-label">Categories</label>
+                <div>
+                    {% for category in form.categories.field.queryset %}
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox"
+                                   class="form-check-input"
+                                   name="categories"
+                                   id="category_{{ category.id }}"
+                                   value="{{ category.id }}"
+                                   {% if category.id in form.categories.value %}checked{% endif %}>
+                            <label class="form-check-label" for="category_{{ category.id }}">{{ category.name }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-check mb-4">
+                <input class="form-check-input"
+                       type="checkbox"
+                       id="completed"
+                       name="completed"
+                       {% if form.completed.value %}checked{% endif %}>
+                <label class="form-check-label" for="completed">Completed</label>
+            </div>
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary w-100">Save</button>
+        </form>
+        <!-- Back to List Link -->
+        <div class="text-center mt-3">
+            <a href="{% url 'task_list' %}" class="btn btn-link">Back to List</a>
+        </div>
+    </div>
+{% endblock %}

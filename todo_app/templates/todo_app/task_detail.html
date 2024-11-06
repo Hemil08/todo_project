@@ -1,0 +1,154 @@
+{% extends 'todo_app/base.html' %}
+{% block content %}
+    <h1 class="text-center mb-4">{{ task.title }}</h1>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Task Details</h5>
+            <p class="card-text">
+                <strong>Description:</strong> {{ task.description }}
+            </p>
+            <p class="card-text">
+                <strong>Priority:</strong> {{ task.priority }}
+            </p>
+            <p class="card-text">
+                <strong>Due Date:</strong> {{ task.due_date }}
+            </p>
+            <p class="card-text">
+                <strong>Status:</strong>
+                {% if task.completed %}
+                    <span class="badge bg-success">Completed</span>
+                {% else %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    <h4 class="mt-5">Subtasks</h4>
+    <ul class="list-group mb-4">
+        {% for subtask in subtasks %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ subtask.title }}
+                <span class="badge {% if subtask.completed %}bg-success{% else %}bg-secondary{% endif %}">
+                    {% if subtask.completed %}
+                        Completed
+                    {% else %}
+                        Pending
+                    {% endif %}
+                </span>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-center">No subtasks available.</li>
+        {% endfor %}
+    </ul>
+    <div class="d-flex justify-content-between">
+        <a href="{% url 'task_update' task.pk %}"
+           class="btn btn-outline-secondary">Edit Task</a>
+        <a href="{% url 'task_list' %}" class="btn btn-link">Back to List</a>
+        <button type="button"
+                class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#createSubtaskModal">Add Subtask</button>
+    </div>
+    <!-- Button to Open Modal -->
+    <!-- Button to Open Subtask Modal -->
+    <!-- Create Task Modal -->
+    <!-- Subtask Modal -->
+    <div class="modal fade"
+         id="createSubtaskModal"
+         tabindex="-1"
+         aria-labelledby="createSubtaskModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createSubtaskModalLabel">Create Subtask</h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'subtask_create' task.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Subtask Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="completed"
+                                   name="completed">
+                            <label class="form-check-label" for="completed">Completed</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Save Subtask</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Comments Section -->
+    <h4 class="mt-5">Comments</h4>
+    <div class="comments-section">
+        <!-- Display existing comments and replies -->
+        <ul class="list-group mb-4">
+            {% for comment in comments %}
+                <li class="list-group-item">
+                    <p>
+                        <strong>{{ comment.user.username }}</strong> - {{ comment.created_at }}
+                        <button class="btn btn-link"
+                                onclick="document.getElementById('reply-form-{{ reply.id }}').style.display='block'">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-reply" viewBox="0 0 16 16">
+                                <path d="M6.598 5.013a.144.144 0 0 1 .202.134V6.3a.5.5 0 0 0 .5.5c.667 0 2.013.005 3.3.822.984.624 1.99 1.76 2.595 3.876-1.02-.983-2.185-1.516-3.205-1.799a8.7 8.7 0 0 0-1.921-.306 7 7 0 0 0-.798.008h-.013l-.005.001h-.001L7.3 9.9l-.05-.498a.5.5 0 0 0-.45.498v1.153c0 .108-.11.176-.202.134L2.614 8.254l-.042-.028a.147.147 0 0 1 0-.252l.042-.028zM7.8 10.386q.103 0 .223.006c.434.02 1.034.086 1.7.271 1.326.368 2.896 1.202 3.94 3.08a.5.5 0 0 0 .933-.305c-.464-3.71-1.886-5.662-3.46-6.66-1.245-.79-2.527-.942-3.336-.971v-.66a1.144 1.144 0 0 0-1.767-.96l-3.994 2.94a1.147 1.147 0 0 0 0 1.946l3.994 2.94a1.144 1.144 0 0 0 1.767-.96z"/>
+                            </svg>
+                        </button>
+                    </p>
+                    <p>{{ comment.content }}</p>
+                    
+                    <!-- Recursive display of replies -->
+                    {% include 'todo_app/comment_replies.html' with comment=comment %}
+
+                    <!-- Reply button to open the reply form -->
+                    <!--<button class="btn btn-link"
+                            onclick="document.getElementById('reply-form-{{ reply.id }}').style.display='block'">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-reply" viewBox="0 0 16 16">
+                            <path d="M6.598 5.013a.144.144 0 0 1 .202.134V6.3a.5.5 0 0 0 .5.5c.667 0 2.013.005 3.3.822.984.624 1.99 1.76 2.595 3.876-1.02-.983-2.185-1.516-3.205-1.799a8.7 8.7 0 0 0-1.921-.306 7 7 0 0 0-.798.008h-.013l-.005.001h-.001L7.3 9.9l-.05-.498a.5.5 0 0 0-.45.498v1.153c0 .108-.11.176-.202.134L2.614 8.254l-.042-.028a.147.147 0 0 1 0-.252l.042-.028zM7.8 10.386q.103 0 .223.006c.434.02 1.034.086 1.7.271 1.326.368 2.896 1.202 3.94 3.08a.5.5 0 0 0 .933-.305c-.464-3.71-1.886-5.662-3.46-6.66-1.245-.79-2.527-.942-3.336-.971v-.66a1.144 1.144 0 0 0-1.767-.96l-3.994 2.94a1.147 1.147 0 0 0 0 1.946l3.994 2.94a1.144 1.144 0 0 0 1.767-.96z"/>
+                        </svg>
+                    </button>-->
+
+                    <!-- Reply form for this comment -->
+                    <div id="reply-form-{{ comment.id }}" class="reply-form" style="display:none;">
+                        <form method="post" action="{% url 'task_detail' task.id %}">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                            <button type="submit" class="btn btn-primary">Post Reply</button>
+                        </form>
+                    </div>
+                </li>
+            {% empty %}
+                <li class="list-group-item text-center">No comments available.</li>
+            {% endfor %}
+        </ul>
+
+        <!-- Add a New Comment -->
+        <h5 class="mt-5">Add a Comment</h5>
+        <div class="d-flex align-items-start mb-4">
+            <!-- Placeholder for User Avatar -->
+            <img src="https://via.placeholder.com/50" alt="User Avatar" class="rounded-circle me-3" style="width: 50px; height: 50px;">
+            
+            <!-- Comment Form -->
+            <form method="post" action="{% url 'task_detail' task.id %}" class="flex-grow-1">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <!-- Styled Text Area for Comment -->
+                    <textarea class="form-control" name="content" rows="3" placeholder="Add a public comment..." required></textarea>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <!-- Submit Button styled like YouTube -->
+                    <button type="submit" class="btn btn-primary">Comment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
