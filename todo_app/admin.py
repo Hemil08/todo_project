@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Task, SubTask, Category
+from .models import Task, SubTask, Category,Team,TeamMembership
 
 # Register your models here.
 # admin.site.register(Task)
@@ -16,3 +16,9 @@ class SubTaskAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Category)
+
+admin.site.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    list_display = ("name","members")
+
+admin.site.register(TeamMembership)

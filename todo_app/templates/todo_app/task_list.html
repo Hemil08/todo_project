@@ -3,7 +3,11 @@
     <h1 class="text-center mb-4">To-Do List</h1>
     <!-- Action Bar -->
     <div class="d-flex justify-content-end mb-4">
-        <a href="{% url 'task_create' %}" class="btn btn-primary">Create a New Task</a>
+        <a href="{% url 'task_create' %}" class="btn btn-primary me-2">Create a New Task</a>
+
+        <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#createTeamModal">
+            Create Team
+        </button>
     </div>
     <!-- Task List -->
     <ul class="list-group">
@@ -16,7 +20,8 @@
                     </h4>
                     <p class="mb-1">{{ task.description }}</p>
                     <small>Priority: {{ task.priority }}</small> |
-                    <small>Due: {{ task.due_date }}</small>
+                    <small>Due: {{ task.due_date }}</small> |
+                    <small>Team: {{task.team.name}}</small>
                 </div>
                 <!-- Action Links -->
                 <div class="btn-group ms-3">

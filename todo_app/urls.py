@@ -17,7 +17,7 @@ urlpatterns = [
     path("", views.task_list, name="task_list"),
     path("register/", views.register, name="register"),
     path("login/", views.user_login, name="login"),
-    path("logout/", views.logout, name="logout"),
+    path("logout/", views.logout_view, name="logout"),
     path("task/<int:pk>/", views.task_detail, name="task_detail"),  # New detail view
     path("task/create/", views.task_create, name="task_create"),
     path("task/<int:pk>/update/", views.task_update, name="task_update"),
@@ -27,6 +27,17 @@ urlpatterns = [
         views.subtask_create,
         name="subtask_create",
     ),
+
+    path("team/",views.team_list,name="team_list"),
+    path("team/create/",views.team_create,name="team_create"),
+    path("team/invite/<int:team_id>",views.invite_to_team,name="invite_to_team"),
+    path("invitation/",views.view_invitaitions,name="view_invitations"),
+    path(
+        "invitation/respond/<int:invitation_id>/<str:response>",
+        views.respond_to_invitation,
+        name="respond_to_invitation",
+    ),
+
     # path("", views.TaskListAPIView.as_view(), name="task_list"),
     # path("create/", views.TaskCreateAPIView.as_view(), name="task_create"),
     # path("update/<int:pk>/", views.TaskUpdateAPIView.as_view(), name="task_update"),

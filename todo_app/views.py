@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
-from .models import Task, SubTask, Comment
-from .forms import TaskForm, CommentForm
+from .models import Task, SubTask, Comment, Team, TeamMembership, Invitation
+from .forms import TaskForm, CommentForm,TeamCreateForm
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth.models import User
 
 # # Rest API
 # from rest_framework.views import APIView
@@ -42,9 +43,9 @@ def register(request):
     return render(request, "todo_app/register.html", {"form": form})
 
 
-# -------------------
-# User Login View
-# -------------------
+    # -------------------
+    # User Login View
+    # -------------------
 def user_login(request):
     """
     Handle user login. If the request method is POST, authenticate the user.
@@ -101,7 +102,7 @@ def task_list(request):
     """
     Display a list of tasks belonging to the currently logged-in user.
     """
-    tasks = Task.objects.filter(user=request.user)  # Get tasks for the logged-in user
+    tasks = Task.objects.filter(team__members=request.user)  # Get tasks for the logged-in user
     return render(request, "todo_app/task_list.html", {"tasks": tasks})
 
 
@@ -119,6 +120,7 @@ def task_create(request):
             task = form.save(commit=False)  # Don't save to DB yet
             task.user = request.user  # Assign the current user to the task
             task.save()  # Save the task to the database
+            form.save_m2m()
             messages.success(request, "Task created successfully!")  # Success message
             return redirect("task_list")  # Redirect to task list
         else:
@@ -178,9 +180,9 @@ def task_delete(request, pk):
     return render(request, "todo_app/task_confirm_delete.html", {"task": task})
 
 
-# -------------------
-# Task Detail View
-# -------------------
+    # -------------------
+    # Task Detail View
+    # -------------------
 @login_required
 # Task Detail View with Comments
 def task_detail(request, pk):
@@ -197,7 +199,7 @@ def task_detail(request, pk):
             comment.user = request.user
             parent_id = request.POST.get(
                 "parent_id"
-            )  # Check if there's a parent ID for a reply
+            )  # Check if there's a parent ID for a     
             if parent_id:
                 comment.parent = Comment.objects.get(id=parent_id)
             comment.save()
@@ -238,6 +240,86 @@ def subtask_create(request, task_pk):
 
     messages.error(request, "Failed to create subtask.")  # Error message
     return redirect("task_detail", pk=task_pk)  # Redirect back to task detail
+
+# ---------------------------------------------------------
+# Team Invitation Views
+# ---------------------------------------------------------
+@login_required
+def invite_to_team(request,team_id):
+    team = get_object_or_404(Team,id=team_id)
+    if request.method == "POST":
+        invited_user_id = request.POST.get("invited_user_id")
+        invited_user = get_object_or_404(User,id=invited_user_id)
+        Invitation.objects.create(
+            team=team, invited_user=invited_user, sender=request.user
+        )
+        messages.success(request,f"Invitation sent to {invited_user.username}.")
+        return redirect("team_list",team_id=team.id)
+
+    users_to_invite = User.objects.exclude(teams=team)
+    return render(
+        request,
+        "todo_app/invite_to_team.html",
+        {"team":team,"users":users_to_invite},
+    )
+
+
+# -------------------
+# View Invitations
+# -------------------
+
+@login_required
+def view_invitaitions(request):
+    invitations = request.user.invitations_received.filter(accepted = False)
+    return render(request,"todo_app/invitations.html",{"invitations":invitations})
+
+# -------------------
+# Accept or Decline Invitation
+# -------------------
+
+@login_required
+def respond_to_invitation(request,invitation_id,response):
+    invitation = get_object_or_404(
+        Invitation, id=invitation_id, invited_user = request.user
+    )
+
+    if response == "accept":
+        invitation.accepted = True
+        invitation.save()
+        TeamMembership.objects.create(user=request.user,team=invitation.team)
+        messages.success(request,f"You have joined the team {invitation.team.name}!")
+    elif response == "decline":
+        invitation.delete()
+        messages.info(request,"Invitation declined.")
+    return redirect("view_invitations")
+
+
+# ---------------------------------------------------------
+# Team Create Views
+# ---------------------------------------------------------
+
+@login_required
+def team_list(request):
+    teams = request.user.teams.all()
+    return render(request,"todo_app/team_list.html",{"teams":teams})
+
+@login_required
+def team_create(request):
+    if request.method == "POST":
+        form = TeamCreateForm(request.POST)
+        if form.is_valid():
+            team = form.save()
+            TeamMembership.objects.create(user=request.user,team=team)
+            messages.success(request,f'Team "{team.name}" created successfully!')
+            return redirect("task_list")
+        else:
+            messages.error(
+                request,"Failed to create team. Please correct the errors below"
+            )
+    else:
+        form = TeamCreateForm()
+    
+    return render(request,"todo_app/team_create.html",{"form":form})
 
 
 # ---------------------------------------------------------
