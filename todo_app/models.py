@@ -82,7 +82,7 @@ class Task(models.Model):
         null=True,
         blank=True,
         related_name="assigned_tasks",
-    )
+    )   
 
     def __str__(self):
         return self.title
