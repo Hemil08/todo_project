@@ -43,9 +43,9 @@ def register(request):
     return render(request, "todo_app/register.html", {"form": form})
 
 
-    # -------------------
-    # User Login View
-    # -------------------
+# -------------------
+# User Login View
+# -------------------
 def user_login(request):
     """
     Handle user login. If the request method is POST, authenticate the user.
@@ -122,7 +122,7 @@ def task_create(request):
             task.save()  # Save the task to the database
             form.save_m2m()
             messages.success(request, "Task created successfully!")  # Success message
-            return redirect("task_list")  # Redirect to task list
+            return redirect("task_list")      # Redirect to task list
         else:
             messages.error(
                 request, "Failed to create task. Please fix the errors below."
@@ -190,7 +190,7 @@ def task_detail(request, pk):
     comments = task.comments.filter(parent__isnull=True).order_by(
         "-created_at"
     )  # Only top-level comments
-
+    
     if request.method == "POST":
         form = CommentForm(request.POST)
         if form.is_valid():
